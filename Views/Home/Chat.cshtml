@@ -1,0 +1,129 @@
+﻿@{
+    ViewBag.Title = "Chat";
+}
+
+<center>
+    <img src="~/Content/img/bear.gif" width="250" height="250"/>
+    <h2>Bear Bot</h2>
+    <hr style="width:50%" />
+</center>
+<div class="container">
+    <input type="hidden" id="displayname" />
+    <ul id="discussion"></ul>
+
+    <div id="loading" style="display:none;">
+        
+        <img src="~/Content/img/rs.gif" style="margin-right:1px">
+    </div>
+    <center>
+        <br/>
+       
+        <input type="text" id="message" />
+        <input type="button" id="sendmessage" value="Send" />
+    </center>
+</div>
+
+@section scripts {
+
+    <script src="~/Scripts/jquery.signalR-2.4.3.min.js"></script>
+    <script src="~/signalr/hubs"></script>
+
+    <script>
+        $(function () {
+            var chat = $.connection.chatHub;
+            var username = '';
+
+      
+            chat.client.addNewMessageToPage = function (name, message) {
+                var alignClass = name === username ? 'my-message' : 'other-message';
+
+                if (name == username) {
+                    $('#loading').show()
+                }
+                else { $('#loading').hide();}
+               
+
+                $('#discussion').append('<li class="' + alignClass + '"><strong>' + htmlEncode(name)
+                    + '</strong>: ' + htmlEncode(message) + '</li>');
+            };
+
+            username = prompt('Enter your name:', '');
+            $('#displayname').val(username);
+
+            $('#message').focus();
+
+            $.connection.hub.start().done(function () {
+                $('#sendmessage').click(function () {
+                    $('#loading').show(); 
+
+                    chat.server.send($('#displayname').val(), $('#message').val());
+
+                    $('#message').val('').focus();
+                });
+            });
+        });
+
+        function htmlEncode(value) {
+            return $('<div />').text(value).html();
+        }
+    </script>
+}
+
+<style>
+    #discussion {
+        list-style-type: none;
+        padding: 0;
+    }
+
+        #discussion li {
+            margin-bottom: 10px;
+            padding: 5px 10px;
+            border-radius: 10px;
+            max-width: 60%;
+        }
+
+    .my-message {
+        background-color: #d1e7dd;
+        text-align: left;
+        margin-left: 0;
+        margin-right: auto;
+    }
+
+    .other-message {
+        background-color: #f8d7da;
+        text-align: right;
+        margin-left: auto;
+        margin-right: 0;
+    }
+
+   
+    #loading {
+        margin-top: 10px;
+        text-align: center;
+        color: #888;
+    }
+      
+        #message {
+            width: 100%;   
+            height: 60px;  
+            padding: 10px; 
+            font-size: 18px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        
+    #sendmessage {
+        width: 10%; 
+        height: 60px; 
+        padding: 5px; 
+        
+        border-radius: 5px; 
+        background-color: #686D76; 
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+
+      
+</style>
